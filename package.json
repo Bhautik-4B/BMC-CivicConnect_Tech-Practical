@@ -11,10 +11,11 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "start": "node server/dist/server.js",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules",
-    "seed": "npm run seed --workspace=server"
+    "seed": "npm run seed --workspace=@bmc/server"
   },
   "devDependencies": {
     "turbo": "^2.4.4",

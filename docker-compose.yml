@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bmc-civicconnect-app
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - CLIENT_URL=http://localhost:5000,http://localhost:5173,http://localhost:80
+      - MONGODB_URI=${MONGODB_URI:-mongodb+srv://niravshahbvn_db_user:TA3WmUrCyHfEdTHF@cluster0.yopnzzs.mongodb.net/bmc_civic_connect?retryWrites=true&w=majority}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET:-bmc_jwt_access_super_secret_key_2026_xYz123}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-bmc_jwt_refresh_super_secret_key_2026_aBc987}
+      - JWT_ACCESS_EXPIRES_IN=15m
+      - JWT_REFRESH_EXPIRES_IN=7d
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

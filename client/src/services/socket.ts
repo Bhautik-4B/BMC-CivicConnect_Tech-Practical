@@ -5,9 +5,10 @@ let socket: Socket | null = null;
 export const getSocket = (): Socket => {
   if (!socket) {
     const socketUrl =
-      process.env.NODE_ENV === 'production'
+      import.meta.env.VITE_SOCKET_URL ||
+      (import.meta.env.PROD
         ? window.location.origin
-        : `${window.location.protocol}//${window.location.hostname}:5000`;
+        : `${window.location.protocol}//${window.location.hostname}:5000`);
 
     socket = io(socketUrl, {
       withCredentials: true,
