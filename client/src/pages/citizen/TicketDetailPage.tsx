@@ -8,6 +8,7 @@ import { PriorityBadge } from '../../components/common/PriorityBadge.js';
 import { TicketTimeline } from '../../components/ticket/TicketTimeline.js';
 import { ProofViewer } from '../../components/ticket/ProofViewer.js';
 import { ResolutionVerificationModal } from '../../components/ticket/ResolutionVerificationModal.js';
+import { GISMap } from '../../components/maps/GISMap.js';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner.js';
 import { Modal } from '../../components/common/Modal.js';
 import { Button } from '../../components/common/Button.js';
@@ -15,6 +16,7 @@ import {
   IComplaint,
   IAuditLogEntry,
   IDepartment,
+  IWard,
   ComplaintStatuses,
   Priorities,
   UserRoles
@@ -82,7 +84,7 @@ export const TicketDetailPage: React.FC = () => {
 
   // Fetch Staff for Department dispatch
   const { data: staffList } = useQuery({
-    queryKey: ['dept-staff'],
+    queryKey: ['dept-staff', user?.departmentId],
     queryFn: async () => {
       const res: any = await api.get('/dept/staff');
       return res.data as any[];
@@ -91,6 +93,15 @@ export const TicketDetailPage: React.FC = () => {
       user?.role === UserRoles.DEPT_OFFICER ||
       user?.role === UserRoles.DEPT_SUPERVISOR ||
       user?.role === UserRoles.BMC_ADMIN
+  });
+
+  // Fetch Wards for map polygons
+  const { data: wardsList } = useQuery({
+    queryKey: ['wards'],
+    queryFn: async () => {
+      const res: any = await api.get('/admin/wards');
+      return res.data as IWard[];
+    }
   });
 
   // Citizen Verification Mutation
@@ -449,6 +460,29 @@ export const TicketDetailPage: React.FC = () => {
                     />
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Interactive GIS Location & Ward Boundary Map */}
+            {complaint.location?.coordinates && (
+              <div className="pt-4 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-civic-600" />
+                    <span>Geospatial Location & Municipal Ward Mapping</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                    {complaint.location.coordinates[1]?.toFixed(5)}° N, {complaint.location.coordinates[0]?.toFixed(5)}° E
+                  </span>
+                </div>
+                <GISMap
+                  complaints={[complaint]}
+                  wards={wardsList || []}
+                  center={[complaint.location.coordinates[1] || 21.753, complaint.location.coordinates[0] || 72.138]}
+                  zoom={15}
+                  height="260px"
+                  baseLink={user?.role === UserRoles.BMC_ADMIN ? '/admin/ticket' : user?.role === UserRoles.FIELD_STAFF ? '/field/ticket' : user?.role === UserRoles.DEPT_OFFICER ? '/dept/ticket' : '/citizen/ticket'}
+                />
               </div>
             )}
           </div>

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { User, IUserDocument } from '../models/User.js';
@@ -40,18 +41,43 @@ export class AuthService {
   /**
    * Verifies OTP and generates auth tokens
    */
-  public static async verifyOtp(mobile: string, otp: string, name?: string): Promise<IAuthSession> {
-    const user = await User.findOne({ mobile });
+  public static async verifyOtp(
+    mobile: string,
+    otp: string,
+    name?: string,
+    email?: string,
+    wardId?: string,
+    zoneId?: string
+  ): Promise<IAuthSession> {
+    let user = await User.findOne({ mobile });
     if (!user) {
-      throw new BadRequestError('User not found. Please request OTP first.');
-    }
+      // Auto-create citizen on OTP verify if they don't exist yet
+      user = new User({
+        name: (name && name.trim()) || `Citizen ${mobile.slice(-4)}`,
+        mobile,
+        email: email?.trim().toLowerCase(),
+        wardId: wardId ? new mongoose.Types.ObjectId(wardId) : undefined,
+        zoneId: zoneId ? new mongoose.Types.ObjectId(zoneId) : undefined,
+        role: UserRoles.CITIZEN,
+        isActive: true
+      });
+    } else {
+      if (user.otpCode !== otp && otp !== '123456') {
+        throw new BadRequestError('Invalid OTP code');
+      }
 
-    if (user.otpCode !== otp && otp !== '123456') {
-      throw new BadRequestError('Invalid OTP code');
-    }
-
-    if (name && name.trim()) {
-      user.name = name.trim();
+      if (name && name.trim()) {
+        user.name = name.trim();
+      }
+      if (email && email.trim()) {
+        user.email = email.trim().toLowerCase();
+      }
+      if (wardId) {
+        user.wardId = new mongoose.Types.ObjectId(wardId);
+      }
+      if (zoneId) {
+        user.zoneId = new mongoose.Types.ObjectId(zoneId);
+      }
     }
 
     user.otpCode = undefined;
@@ -60,6 +86,39 @@ export class AuthService {
 
     return this.generateSession(user);
   }
+
+  /**
+   * Direct Citizen Registration & Instant Login
+   */
+  public static async registerCitizen(input: {
+    name: string;
+    mobile: string;
+    email?: string;
+    wardId?: string;
+    zoneId?: string;
+  }): Promise<IAuthSession> {
+    let user = await User.findOne({ mobile: input.mobile });
+    if (user) {
+      user.name = input.name.trim();
+      if (input.email) user.email = input.email.trim().toLowerCase();
+      if (input.wardId) user.wardId = new mongoose.Types.ObjectId(input.wardId);
+      if (input.zoneId) user.zoneId = new mongoose.Types.ObjectId(input.zoneId);
+    } else {
+      user = new User({
+        name: input.name.trim(),
+        mobile: input.mobile,
+        email: input.email ? input.email.trim().toLowerCase() : undefined,
+        wardId: input.wardId ? new mongoose.Types.ObjectId(input.wardId) : undefined,
+        zoneId: input.zoneId ? new mongoose.Types.ObjectId(input.zoneId) : undefined,
+        role: UserRoles.CITIZEN,
+        isActive: true
+      });
+    }
+
+    await user.save();
+    return this.generateSession(user);
+  }
+
 
   /**
    * Username / Email / Mobile password login for BMC staff and Admins

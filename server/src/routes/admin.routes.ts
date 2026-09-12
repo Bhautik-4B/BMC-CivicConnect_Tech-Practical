@@ -24,7 +24,13 @@ router.get(
 
 // Master data endpoints
 router.get('/departments', AdminController.getDepartments);
+router.post('/departments', authorize(UserRoles.BMC_ADMIN), AdminController.createDepartment);
+router.patch('/departments/:id', authorize(UserRoles.BMC_ADMIN), AdminController.updateDepartment);
+router.delete('/departments/:id', authorize(UserRoles.BMC_ADMIN), AdminController.deleteDepartment);
+router.get('/departments/:id/staff', authorize(UserRoles.BMC_ADMIN, UserRoles.DEPT_OFFICER), AdminController.getDepartmentStaff);
+
 router.get('/wards', AdminController.getWards);
 router.get('/categories', AdminController.getCategories);
 
 export const adminRoutes = router;
+

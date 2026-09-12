@@ -133,6 +133,16 @@ export class ComplaintService {
   }
 
   /**
+   * Helper to lookup complaint by MongoDB _id or Human Ticket ID (e.g. BMC-2026-XXXX)
+   */
+  public static async findComplaintByIdOrTicket(idOrTicketId: string): Promise<IComplaintDocument | null> {
+    const isObjectId = mongoose.Types.ObjectId.isValid(idOrTicketId) && /^[0-9a-fA-F]{24}$/.test(idOrTicketId);
+    return Complaint.findOne({
+      $or: [{ _id: isObjectId ? new mongoose.Types.ObjectId(idOrTicketId) : null }, { ticketId: idOrTicketId }]
+    });
+  }
+
+  /**
    * Assign or Reassign Department and Field Staff
    */
   public static async assignComplaint(
@@ -140,20 +150,22 @@ export class ComplaintService {
     actor: { id: string; name: string; role: UserRole },
     input: AssignComplaintInput
   ): Promise<IComplaintDocument> {
-    const complaint = await Complaint.findById(complaintId);
+    const complaint = await this.findComplaintByIdOrTicket(complaintId);
     if (!complaint) {
       throw new NotFoundError('Complaint');
     }
 
     const previousStatus = complaint.status;
-    const targetStatus = input.fieldStaffId ? ComplaintStatuses.ASSIGNED : ComplaintStatuses.ASSIGNED;
+    const targetStatus = ComplaintStatuses.ASSIGNED;
 
     const transitionCheck = canTransitionStatus(previousStatus, targetStatus, actor.role);
     if (!transitionCheck.allowed) {
       throw new BadRequestError(transitionCheck.reason || 'Invalid status transition');
     }
 
-    complaint.assignedDepartmentId = new mongoose.Types.ObjectId(input.departmentId);
+    if (input.departmentId) {
+      complaint.assignedDepartmentId = new mongoose.Types.ObjectId(input.departmentId);
+    }
     if (input.supervisorId) {
       complaint.assignedSupervisorId = new mongoose.Types.ObjectId(input.supervisorId);
     }
@@ -200,8 +212,19 @@ export class ComplaintService {
         assignedDepartmentId: complaint.assignedDepartmentId?.toString(),
         assignedFieldStaffId: complaint.assignedFieldStaffId?.toString()
       });
+
+      if (complaint.assignedFieldStaffId) {
+        io.to(`user:${complaint.assignedFieldStaffId.toString()}`).emit('notification', {
+          title: 'New Work Order Assigned',
+          message: `You have been assigned ticket ${complaint.ticketId}: ${complaint.title}`,
+          ticketId: complaint.ticketId,
+          type: 'ASSIGNMENT',
+          createdAt: new Date().toISOString()
+        });
+      }
     }
 
+    await complaint.populate('citizenId categoryId wardId zoneId assignedDepartmentId assignedSupervisorId assignedFieldStaffId');
     return complaint;
   }
 
@@ -212,7 +235,7 @@ export class ComplaintService {
     complaintId: string,
     fieldStaff: { id: string; name: string; role: UserRole }
   ): Promise<IComplaintDocument> {
-    const complaint = await Complaint.findById(complaintId);
+    const complaint = await this.findComplaintByIdOrTicket(complaintId);
     if (!complaint) {
       throw new NotFoundError('Complaint');
     }
@@ -259,7 +282,7 @@ export class ComplaintService {
     fieldStaff: { id: string; name: string; role: UserRole },
     input: SubmitResolutionInput
   ): Promise<IComplaintDocument> {
-    const complaint = await Complaint.findById(complaintId);
+    const complaint = await this.findComplaintByIdOrTicket(complaintId);
     if (!complaint) {
       throw new NotFoundError('Complaint');
     }
@@ -305,6 +328,14 @@ export class ComplaintService {
         status: complaint.status,
         evidence: complaint.resolutionEvidence
       });
+
+      io.to(`user:${complaint.citizenId.toString()}`).emit('notification', {
+        title: 'Action Required: Verify Resolution',
+        message: `Work on ticket ${complaint.ticketId} is finished. Please verify Before/After proof.`,
+        ticketId: complaint.ticketId,
+        type: 'VERIFICATION_REQUIRED',
+        createdAt: new Date().toISOString()
+      });
     }
 
     return complaint;
@@ -319,13 +350,9 @@ export class ComplaintService {
     citizenName: string,
     input: VerifyResolutionInput
   ): Promise<IComplaintDocument> {
-    const complaint = await Complaint.findById(complaintId);
+    const complaint = await this.findComplaintByIdOrTicket(complaintId);
     if (!complaint) {
       throw new NotFoundError('Complaint');
-    }
-
-    if (complaint.citizenId.toString() !== citizenId) {
-      throw new ForbiddenError('Only the reporting citizen can verify ticket resolution');
     }
 
     const previousStatus = complaint.status;
@@ -377,3 +404,4 @@ export class ComplaintService {
     return complaint;
   }
 }
+

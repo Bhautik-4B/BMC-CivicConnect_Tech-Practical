@@ -15,8 +15,8 @@ export class AuthController {
 
   public static async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { mobile, otp, name } = req.body;
-      const session = await AuthService.verifyOtp(mobile, otp, name);
+      const { mobile, otp, name, email, wardId, zoneId } = req.body;
+      const session = await AuthService.verifyOtp(mobile, otp, name, email, wardId, zoneId);
 
       res.cookie('accessToken', session.accessToken, {
         httpOnly: true,
@@ -30,6 +30,25 @@ export class AuthController {
       next(error);
     }
   }
+
+  public static async register(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { name, mobile, email, wardId, zoneId } = req.body;
+      const session = await AuthService.registerCitizen({ name, mobile, email, wardId, zoneId });
+
+      res.cookie('accessToken', session.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000
+      });
+
+      sendSuccess(res, session, 'Citizen registered and logged in successfully', 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
 
   public static async passwordLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

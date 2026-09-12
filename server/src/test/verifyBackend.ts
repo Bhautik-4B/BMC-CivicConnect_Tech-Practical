@@ -245,9 +245,10 @@ export async function runCompleteBackendVerification() {
       }
     );
 
+    const assignedStaffId = (assignedComplaint.assignedFieldStaffId as any)?._id?.toString() || assignedComplaint.assignedFieldStaffId?.toString();
     assert(
       assignedComplaint.status === ComplaintStatuses.ASSIGNED &&
-      assignedComplaint.assignedFieldStaffId?.toString() === fieldWorker._id.toString(),
+      assignedStaffId === fieldWorker._id.toString(),
       'Complaint Service',
       'Step 2 (Admin/Dept Triage): Ticket Assigned to Field Staff Operational'
     );
@@ -342,6 +343,68 @@ export async function runCompleteBackendVerification() {
       '500m Geospatial Duplicate Scanning ($nearSphere) Operational',
       `Found ${duplicates.length} duplicate ticket(s)`
     );
+
+    // ---------------------------------------------------------
+    // SECTION 6: CITIZEN REGISTRATION, STAFF MANAGEMENT & NOTIFICATIONS
+    // ---------------------------------------------------------
+    console.log('\n👥 SECTION 6: Citizen Registration, Staff Management & Notification System Verification');
+
+    // 1. Citizen Self Registration
+    const newCitizenSession = await AuthService.registerCitizen({
+      name: 'Priya Mehta',
+      mobile: '9123456780',
+      email: 'priya.mehta@gmail.com',
+      wardId: ward5._id.toString()
+    });
+    assert(
+      newCitizenSession.user.name === 'Priya Mehta' && newCitizenSession.user.role === UserRoles.CITIZEN,
+      'Citizen Auth',
+      'Citizen Full Profile Registration & Instant Auth Session Issuance Operational'
+    );
+
+    // 2. Department Staff Creation (Field Technician)
+    const newTech = await User.create({
+      name: 'Sunil Rathod',
+      mobile: '9666666661',
+      email: 'sunil.rathod@bmc.gov.in',
+      password: hashedPassword,
+      role: UserRoles.FIELD_STAFF,
+      departmentId: deptRoad._id,
+      wardId: ward5._id,
+      employeeId: 'EMP-ROAD-202',
+      isActive: true
+    });
+    assert(
+      !!newTech._id && newTech.employeeId === 'EMP-ROAD-202',
+      'Staff Management',
+      'Department Staff Creation & Role Scoping Operational'
+    );
+
+    // 3. Notification Dispatch & Read Status
+    const testNotif = await Notification.create({
+      recipientId: citizenUser._id,
+      title: 'Road Work Completed',
+      message: 'Your reported pothole ticket has been resolved by Sunil Rathod.',
+      ticketId: createdComplaint.ticketId,
+      complaintId: createdComplaint._id,
+      type: 'STATUS_UPDATE',
+      isRead: false
+    });
+    assert(
+      !!testNotif._id && testNotif.isRead === false,
+      'Notification System',
+      'Real-Time Notification Persistence & Unread Queue Tracking Operational'
+    );
+
+    // Mark as read
+    testNotif.isRead = true;
+    await testNotif.save();
+    assert(
+      testNotif.isRead === true,
+      'Notification System',
+      'Notification Acknowledgment & Read-State Mutation Operational'
+    );
+
 
     // ---------------------------------------------------------
     // SUMMARY

@@ -63,6 +63,8 @@ export const DepartmentDashboard: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dept-queue'] });
       queryClient.invalidateQueries({ queryKey: ['dept-staff'] });
+      queryClient.invalidateQueries({ queryKey: ['complaints'] });
+      queryClient.invalidateQueries({ queryKey: ['complaint'] });
       setDispatchModalComplaint(null);
     }
   });
@@ -444,7 +446,7 @@ export const DepartmentDashboard: React.FC = () => {
                 className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-civic-500 focus:outline-none bg-white font-medium"
               >
                 {staff.map((st) => (
-                  <option key={st.id} value={st.id}>
+                  <option key={st.id || st._id} value={st.id || st._id}>
                     {st.name} ({st.employeeId || 'Staff'}) — {st.activeTasks || 0} Active Tasks
                   </option>
                 ))}

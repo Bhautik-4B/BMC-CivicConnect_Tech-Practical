@@ -68,6 +68,9 @@ export const AllComplaintsPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-complaints'] });
+      queryClient.invalidateQueries({ queryKey: ['complaint'] });
+      queryClient.invalidateQueries({ queryKey: ['dept-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
       setComplaintToAssign(null);
     }
   });

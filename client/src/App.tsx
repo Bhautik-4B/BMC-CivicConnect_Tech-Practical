@@ -22,6 +22,7 @@ import { DepartmentManagementPage } from './pages/admin/DepartmentManagementPage
 import { EscalationCenterPage } from './pages/admin/EscalationCenterPage.js';
 import { DepartmentDashboard } from './pages/department/DepartmentDashboard.js';
 import { DepartmentQueuePage } from './pages/department/DepartmentQueuePage.js';
+import { StaffManagementPage } from './pages/department/StaffManagementPage.js';
 import { FieldDashboard } from './pages/field/FieldDashboard.js';
 
 // Protected Route Component
@@ -144,7 +145,7 @@ export const App: React.FC = () => {
           <Route index element={<DepartmentDashboard />} />
           <Route path="queue" element={<DepartmentQueuePage />} />
           <Route path="ticket/:id" element={<TicketDetailPage />} />
-          <Route path="staff" element={<DepartmentDashboard />} />
+          <Route path="staff" element={<StaffManagementPage />} />
         </Route>
 
         {/* 4. Field Staff Mobile App Routes */}

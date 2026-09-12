@@ -29,7 +29,7 @@ export const CreateComplaintSchema = z.object({
 export type CreateComplaintInput = z.infer<typeof CreateComplaintSchema>;
 
 export const AssignComplaintSchema = z.object({
-  departmentId: z.string().min(1, 'Department ID is required'),
+  departmentId: z.string().optional(),
   supervisorId: z.string().optional(),
   fieldStaffId: z.string().optional(),
   priority: z.enum([Priorities.NORMAL, Priorities.HIGH, Priorities.EMERGENCY]).optional(),

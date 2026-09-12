@@ -130,6 +130,112 @@ export class AdminController {
     }
   }
 
+  public static async createDepartment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { name, code, description, headOfficerId, defaultSlaHours } = req.body;
+      const dept = new Department({
+        name: name.trim(),
+        code: code.trim().toUpperCase(),
+        description: description?.trim(),
+        headOfficerId: headOfficerId || undefined,
+        defaultSlaHours: defaultSlaHours || { EMERGENCY: 4, HIGH: 24, NORMAL: 72 },
+        isActive: true
+      });
+      await dept.save();
+      sendSuccess(res, dept, 'Department created successfully', 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async updateDepartment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const { name, code, description, headOfficerId, defaultSlaHours, isActive } = req.body;
+
+      const dept = await Department.findById(id);
+      if (!dept) {
+        res.status(404).json({ success: false, message: 'Department not found' });
+        return;
+      }
+
+      if (name) dept.name = name.trim();
+      if (code) dept.code = code.trim().toUpperCase();
+      if (description !== undefined) dept.description = description.trim();
+      if (headOfficerId !== undefined) dept.headOfficerId = headOfficerId || undefined;
+      if (defaultSlaHours) dept.defaultSlaHours = defaultSlaHours;
+      if (isActive !== undefined) dept.isActive = isActive;
+
+      await dept.save();
+      sendSuccess(res, dept, 'Department updated successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async deleteDepartment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const dept = await Department.findById(id);
+      if (!dept) {
+        res.status(404).json({ success: false, message: 'Department not found' });
+        return;
+      }
+
+      // Check active complaints assigned to department
+      const activeCount = await Complaint.countDocuments({
+        assignedDepartmentId: dept._id,
+        status: { $in: [ComplaintStatuses.SUBMITTED, ComplaintStatuses.ASSIGNED, ComplaintStatuses.IN_PROGRESS] }
+      });
+
+      if (activeCount > 0) {
+        dept.isActive = false;
+        await dept.save();
+        sendSuccess(res, { deactivated: true, activeComplaints: activeCount }, 'Department has active complaints; marked as inactive.');
+        return;
+      }
+
+      dept.isActive = false;
+      await dept.save();
+      sendSuccess(res, { deactivated: true }, 'Department deactivated successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public static async getDepartmentStaff(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const staffMembers = await User.find({
+        departmentId: id
+      }).select('-password -otpCode').sort({ createdAt: -1 });
+
+      const staffWithWorkload = await Promise.all(
+        staffMembers.map(async (staff) => {
+          const activeTasks = await Complaint.countDocuments({
+            assignedFieldStaffId: staff._id,
+            status: { $in: [ComplaintStatuses.ASSIGNED, ComplaintStatuses.IN_PROGRESS] }
+          });
+          const completedTasks = await Complaint.countDocuments({
+            assignedFieldStaffId: staff._id,
+            status: { $in: [ComplaintStatuses.RESOLVED, ComplaintStatuses.CLOSED] }
+          });
+
+          return {
+            ...staff.toJSON(),
+            activeTasks,
+            completedTasks,
+            isAvailable: activeTasks < 10
+          };
+        })
+      );
+
+      sendSuccess(res, staffWithWorkload, 'Department staff with workload retrieved');
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public static async getWards(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const wards = await Ward.find().populate('zoneId nodalOfficerId').sort({ wardNumber: 1 });

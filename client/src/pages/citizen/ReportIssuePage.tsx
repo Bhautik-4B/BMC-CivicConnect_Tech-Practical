@@ -18,6 +18,7 @@ import {
   Waves
 } from 'lucide-react';
 import { ICategory, IWard, Priorities, PriorityLabels } from '@bmc/shared';
+import { LocationPickerMap } from '../../components/maps/LocationPickerMap.js';
 
 export const ReportIssuePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -47,7 +48,17 @@ export const ReportIssuePage: React.FC = () => {
     }
   });
 
+  // Fetch Wards
+  const { data: wardsData } = useQuery({
+    queryKey: ['wards'],
+    queryFn: async () => {
+      const res: any = await api.get('/admin/wards');
+      return res.data as IWard[];
+    }
+  });
+
   const categories = categoriesData || [];
+  const wards = wardsData || [];
 
   // Auto-select category if passed in query param
   useEffect(() => {
@@ -318,9 +329,21 @@ export const ReportIssuePage: React.FC = () => {
       {/* Step 3: Location Pinning & Smart Information */}
       {step === 3 && (
         <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
+          {/* Interactive GIS Map & Pin Drop */}
+          <LocationPickerMap
+            coordinates={coordinates}
+            onChange={(newCoords, newAddr) => {
+              setCoordinates(newCoords);
+              if (newAddr) setAddress(newAddr);
+            }}
+            detectedWard={detectedWard}
+            wards={wards}
+            height="320px"
+          />
+
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Address / Area Name <span className="text-red-500">*</span>
+              Confirmed Address / Landmark <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />

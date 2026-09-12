@@ -4,6 +4,7 @@ import { complaintRoutes } from './complaint.routes.js';
 import { adminRoutes } from './admin.routes.js';
 import { deptRoutes } from './dept.routes.js';
 import { geoRoutes } from './geo.routes.js';
+import { notificationRoutes } from './notification.routes.js';
 
 const router = Router();
 
@@ -12,6 +13,7 @@ router.use('/complaints', complaintRoutes);
 router.use('/admin', adminRoutes);
 router.use('/dept', deptRoutes);
 router.use('/geo', geoRoutes);
+router.use('/notifications', notificationRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

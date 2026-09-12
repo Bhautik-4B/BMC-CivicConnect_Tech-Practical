@@ -5,13 +5,15 @@ import { authenticate } from '../middlewares/auth.middleware.js';
 import {
   SendOtpSchema,
   VerifyOtpSchema,
-  PasswordLoginSchema
+  PasswordLoginSchema,
+  CitizenRegisterSchema
 } from '@bmc/shared';
 
 const router = Router();
 
 router.post('/otp/send', validate(SendOtpSchema), AuthController.sendOtp);
 router.post('/otp/verify', validate(VerifyOtpSchema), AuthController.verifyOtp);
+router.post('/register', validate(CitizenRegisterSchema), AuthController.register);
 router.post('/login', validate(PasswordLoginSchema), AuthController.passwordLogin);
 router.get('/profile', authenticate, AuthController.getProfile);
 router.post('/logout', authenticate, AuthController.logout);

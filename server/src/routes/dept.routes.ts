@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { DeptController } from '../controllers/dept.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { authorize } from '../middlewares/rbac.middleware.js';
-import { UserRoles } from '@bmc/shared';
+import { validate } from '../middlewares/validate.middleware.js';
+import { UserRoles, CreateStaffSchema, UpdateStaffSchema } from '@bmc/shared';
 
 const router = Router();
 
@@ -15,11 +16,34 @@ router.get(
   DeptController.getDepartmentQueue
 );
 
-// Department staff workload
+// Department staff workload & list
 router.get(
   '/staff',
   authorize(UserRoles.DEPT_OFFICER, UserRoles.DEPT_SUPERVISOR, UserRoles.BMC_ADMIN),
   DeptController.getDepartmentStaff
+);
+
+// Create new staff member
+router.post(
+  '/staff',
+  authorize(UserRoles.DEPT_OFFICER, UserRoles.DEPT_SUPERVISOR, UserRoles.BMC_ADMIN),
+  validate(CreateStaffSchema),
+  DeptController.createStaff
+);
+
+// Update staff member
+router.patch(
+  '/staff/:id',
+  authorize(UserRoles.DEPT_OFFICER, UserRoles.DEPT_SUPERVISOR, UserRoles.BMC_ADMIN),
+  validate(UpdateStaffSchema),
+  DeptController.updateStaff
+);
+
+// Deactivate staff member
+router.delete(
+  '/staff/:id',
+  authorize(UserRoles.DEPT_OFFICER, UserRoles.DEPT_SUPERVISOR, UserRoles.BMC_ADMIN),
+  DeptController.deleteStaff
 );
 
 // Field staff individual task queue
@@ -30,3 +54,4 @@ router.get(
 );
 
 export const deptRoutes = router;
+
