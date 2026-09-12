@@ -32,9 +32,10 @@ export class ComplaintController {
 
   public static async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
+      const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
       const complaint = await Complaint.findOne({
-        $or: [{ _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }, { ticketId: id }]
+        $or: [{ _id: isObjectId ? id : null }, { ticketId: id }]
       }).populate('citizenId categoryId wardId zoneId assignedDepartmentId assignedSupervisorId assignedFieldStaffId');
 
       if (!complaint) {
@@ -52,7 +53,7 @@ export class ComplaintController {
   public static async assign(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) throw new UnauthorizedError();
-      const { id } = req.params;
+      const id = String(req.params.id);
       const updated = await ComplaintService.assignComplaint(
         id,
         { id: req.user.id, name: req.user.name, role: req.user.role },
@@ -67,7 +68,7 @@ export class ComplaintController {
   public static async startWork(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) throw new UnauthorizedError();
-      const { id } = req.params;
+      const id = String(req.params.id);
       const updated = await ComplaintService.startWork(
         id,
         { id: req.user.id, name: req.user.name, role: req.user.role }
@@ -81,7 +82,7 @@ export class ComplaintController {
   public static async submitResolution(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) throw new UnauthorizedError();
-      const { id } = req.params;
+      const id = String(req.params.id);
       const updated = await ComplaintService.submitResolutionProof(
         id,
         { id: req.user.id, name: req.user.name, role: req.user.role },
@@ -96,7 +97,7 @@ export class ComplaintController {
   public static async verifyResolution(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) throw new UnauthorizedError();
-      const { id } = req.params;
+      const id = String(req.params.id);
       const updated = await ComplaintService.verifyResolution(
         id,
         req.user.id,

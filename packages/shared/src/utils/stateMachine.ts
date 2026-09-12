@@ -59,9 +59,10 @@ export function canTransitionStatus(
 
   // Role-specific transition rules
   if (actorRole === UserRoles.CITIZEN) {
+    const validCitizenTargets: ComplaintStatus[] = [ComplaintStatuses.CLOSED, ComplaintStatuses.REOPENED];
     if (
       currentStatus === ComplaintStatuses.AWAITING_VERIFICATION &&
-      ![ComplaintStatuses.CLOSED, ComplaintStatuses.REOPENED].includes(targetStatus)
+      !validCitizenTargets.includes(targetStatus)
     ) {
       return {
         allowed: false,
@@ -80,9 +81,13 @@ export function canTransitionStatus(
         reason: 'Field staff can only mark assigned tasks as In Progress'
       };
     }
+    const validStaffTargets: ComplaintStatus[] = [
+      ComplaintStatuses.AWAITING_VERIFICATION,
+      ComplaintStatuses.RESOLVED
+    ];
     if (
       currentStatus === ComplaintStatuses.IN_PROGRESS &&
-      ![ComplaintStatuses.AWAITING_VERIFICATION, ComplaintStatuses.RESOLVED].includes(targetStatus)
+      !validStaffTargets.includes(targetStatus)
     ) {
       return {
         allowed: false,

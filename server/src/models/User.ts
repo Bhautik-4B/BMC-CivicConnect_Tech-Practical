@@ -44,13 +44,14 @@ const UserSchema = new Schema<IUserDocument>(
     timestamps: true,
     toJSON: {
       transform: (_, ret) => {
-        ret.id = ret._id.toString();
-        delete ret._id;
-        delete ret.__v;
-        delete ret.password;
-        delete ret.otpCode;
-        delete ret.otpExpiresAt;
-        return ret;
+        const obj = ret as any;
+        obj.id = obj._id?.toString();
+        delete obj._id;
+        delete obj.__v;
+        delete obj.password;
+        delete obj.otpCode;
+        delete obj.otpExpiresAt;
+        return obj;
       }
     }
   }

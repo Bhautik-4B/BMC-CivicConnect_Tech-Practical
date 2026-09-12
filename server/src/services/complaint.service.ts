@@ -45,7 +45,7 @@ export class ComplaintService {
     const [lng, lat] = input.location.coordinates;
 
     // 1. Smart Ward Detection
-    let ward = input.wardId ? await Ward.findById(input.wardId) : null;
+    let ward: any = input.wardId ? await Ward.findById(input.wardId) : null;
     if (!ward) {
       ward = await GeoService.detectWard(lng, lat);
     }
