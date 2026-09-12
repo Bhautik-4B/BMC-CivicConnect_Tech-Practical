@@ -6,6 +6,12 @@ import { UserRoles } from '@bmc/shared';
 
 const router = Router();
 
+// Public master data endpoints (Wards, Categories, Department lists)
+router.get('/departments', AdminController.getDepartments);
+router.get('/wards', AdminController.getWards);
+router.get('/categories', AdminController.getCategories);
+
+// Protected Admin & Officer routes
 router.use(authenticate);
 
 // Admin / Dept head analytics overview
@@ -22,15 +28,12 @@ router.get(
   AdminController.getAllComplaints
 );
 
-// Master data endpoints
-router.get('/departments', AdminController.getDepartments);
+// Admin Department & Staff Management
 router.post('/departments', authorize(UserRoles.BMC_ADMIN), AdminController.createDepartment);
 router.patch('/departments/:id', authorize(UserRoles.BMC_ADMIN), AdminController.updateDepartment);
 router.delete('/departments/:id', authorize(UserRoles.BMC_ADMIN), AdminController.deleteDepartment);
 router.get('/departments/:id/staff', authorize(UserRoles.BMC_ADMIN, UserRoles.DEPT_OFFICER), AdminController.getDepartmentStaff);
 
-router.get('/wards', AdminController.getWards);
-router.get('/categories', AdminController.getCategories);
-
 export const adminRoutes = router;
+
 

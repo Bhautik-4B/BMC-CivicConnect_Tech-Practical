@@ -20,7 +20,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
+    if (error.response?.status === 401) {
+      // Clear stale token if unauthorized and not already on auth/login page
+      const isAuthEndpoint = error.config?.url?.includes('/auth/');
+      const isPublicMaster = error.config?.url?.includes('/admin/wards') || error.config?.url?.includes('/admin/categories') || error.config?.url?.includes('/admin/departments');
+      if (!isAuthEndpoint && !isPublicMaster) {
+        localStorage.removeItem('bmc_access_token');
+        localStorage.removeItem('bmc_user');
+      }
+    }
     const message = error.response?.data?.message || error.message || 'Something went wrong';
     return Promise.reject(new Error(message));
   }
 );
+
