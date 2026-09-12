@@ -18,7 +18,7 @@ async function bootstrap() {
   // Start background SLA monitor
   SlaService.startSlaMonitor();
 
-  server.listen(env.PORT, () => {
+  server.listen(env.PORT, '0.0.0.0', () => {
     logger.info(`🚀 Server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
     logger.info(`📡 API Base URL: http://localhost:${env.PORT}/api/v1`);
     logger.info(`🏥 Health check: http://localhost:${env.PORT}/api/v1/health`);

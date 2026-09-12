@@ -14,7 +14,21 @@ export function createApp(): Express {
   app.use(helmet());
   app.use(
     cors({
-      origin: [env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:3000'],
+      origin: (origin, callback) => {
+        // Allow mobile/curl (no origin) or any LAN / localhost origins
+        if (
+          !origin ||
+          env.NODE_ENV !== 'production' ||
+          origin.includes('localhost') ||
+          origin.includes('10.') ||
+          origin.includes('192.168.') ||
+          origin.includes('172.') ||
+          origin === env.CLIENT_URL
+        ) {
+          return callback(null, true);
+        }
+        callback(null, true);
+      },
       credentials: true
     })
   );
@@ -34,3 +48,4 @@ export function createApp(): Express {
 
   return app;
 }
+
