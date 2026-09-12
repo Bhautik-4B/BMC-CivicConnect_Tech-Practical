@@ -6,6 +6,7 @@ import { PriorityBadge } from '../../components/common/PriorityBadge.js';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner.js';
 import { Modal } from '../../components/common/Modal.js';
 import { Button } from '../../components/common/Button.js';
+import { TicketCard } from '../../components/ticket/TicketCard.js';
 import {
   IComplaint,
   IDepartment,
@@ -13,11 +14,12 @@ import {
   ComplaintStatuses,
   Priorities
 } from '@bmc/shared';
-import { Search, Filter, UserCheck, ArrowUpRight } from 'lucide-react';
+import { Search, Filter, UserCheck, ArrowUpRight, List, LayoutGrid, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const AllComplaintsPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const [viewMode, setViewMode] = useState<'TABLE' | 'CARDS'>('TABLE');
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('');
@@ -79,7 +81,8 @@ export const AllComplaintsPage: React.FC = () => {
       return (
         c.ticketId.toLowerCase().includes(q) ||
         c.title.toLowerCase().includes(q) ||
-        c.location.address.toLowerCase().includes(q)
+        c.location.address.toLowerCase().includes(q) ||
+        (c.assignedDepartmentName && c.assignedDepartmentName.toLowerCase().includes(q))
       );
     }
     return true;
@@ -103,29 +106,62 @@ export const AllComplaintsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Title & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* Title, Stats & Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900">City Complaint Master Center</h1>
+          <span className="text-xs font-bold uppercase text-civic-600 tracking-wider">
+            Municipal Command & Triage
+          </span>
+          <h1 className="text-xl font-extrabold text-slate-900 mt-1">City Complaint Master Center</h1>
           <p className="text-xs text-slate-500">
             Triage, assign, and monitor all registered tickets across Bhavnagar city wards.
           </p>
         </div>
 
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search by ticket ID or keyword..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-civic-500 focus:outline-none bg-white"
-          />
+        <div className="flex items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+            <button
+              onClick={() => setViewMode('TABLE')}
+              className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
+                viewMode === 'TABLE'
+                  ? 'bg-white text-civic-700 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title="Table View"
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">Table</span>
+            </button>
+            <button
+              onClick={() => setViewMode('CARDS')}
+              className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
+                viewMode === 'CARDS'
+                  ? 'bg-white text-civic-700 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title="Card Grid View"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">Cards</span>
+            </button>
+          </div>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search by ID or keywords..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-civic-500 focus:outline-none bg-white"
+            />
+          </div>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 flex flex-wrap items-center gap-3 text-xs">
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center gap-3 text-xs">
         <div className="flex items-center gap-1.5 font-bold text-slate-700">
           <Filter className="w-4 h-4 text-slate-400" />
           <span>Filters:</span>
@@ -188,21 +224,21 @@ export const AllComplaintsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Complaints Table */}
+      {/* Complaints List/Table Display */}
       {isLoading ? (
         <LoadingSpinner message="Loading complaints catalog..." />
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center text-slate-500 text-xs">
           No complaints found matching current filters.
         </div>
-      ) : (
+      ) : viewMode === 'TABLE' ? (
         <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px]">
+              <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase text-[10px]">
                 <tr>
                   <th className="px-5 py-3.5 font-bold">Ticket ID</th>
-                  <th className="px-5 py-3.5 font-bold">Issue Title</th>
+                  <th className="px-5 py-3.5 font-bold">Issue Title & Location</th>
                   <th className="px-5 py-3.5 font-bold">Ward</th>
                   <th className="px-5 py-3.5 font-bold">Department</th>
                   <th className="px-5 py-3.5 font-bold">Priority</th>
@@ -218,7 +254,7 @@ export const AllComplaintsPage: React.FC = () => {
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="font-semibold text-slate-900">{comp.title}</div>
-                      <div className="text-[11px] text-slate-400 truncate max-w-[240px]">
+                      <div className="text-[11px] text-slate-400 truncate max-w-[260px]">
                         {comp.location.address}
                       </div>
                     </td>
@@ -239,14 +275,14 @@ export const AllComplaintsPage: React.FC = () => {
                     <td className="px-5 py-3.5 text-right space-x-2">
                       <button
                         onClick={() => handleOpenAssignModal(comp)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-civic-50 hover:bg-civic-100 text-civic-700 font-semibold"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-civic-50 hover:bg-civic-100 text-civic-700 font-bold transition-colors"
                       >
                         <UserCheck className="w-3.5 h-3.5" />
                         <span>Assign</span>
                       </button>
                       <Link
                         to={`/citizen/ticket/${comp.ticketId || comp.id}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-colors"
                       >
                         <span>Details</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
@@ -257,6 +293,16 @@ export const AllComplaintsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((comp) => (
+            <TicketCard
+              key={comp.id}
+              complaint={comp}
+              baseLink="/citizen/ticket"
+            />
+          ))}
         </div>
       )}
 
@@ -285,7 +331,7 @@ export const AllComplaintsPage: React.FC = () => {
                 required
                 value={targetDeptId}
                 onChange={(e) => setTargetDeptId(e.target.value)}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-civic-500 focus:outline-none bg-white"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-civic-500 focus:outline-none bg-white font-medium"
               >
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>
@@ -300,7 +346,7 @@ export const AllComplaintsPage: React.FC = () => {
               <select
                 value={targetPriority}
                 onChange={(e) => setTargetPriority(e.target.value)}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-civic-500 focus:outline-none bg-white"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-civic-500 focus:outline-none bg-white font-medium"
               >
                 {Object.values(Priorities).map((p) => (
                   <option key={p} value={p}>

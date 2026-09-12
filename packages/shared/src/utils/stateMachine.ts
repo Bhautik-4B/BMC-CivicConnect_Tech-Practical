@@ -94,6 +94,24 @@ export function canTransitionStatus(
         reason: 'Field staff can only submit completed proof of work'
       };
     }
+    if (
+      currentStatus === ComplaintStatuses.AWAITING_VERIFICATION ||
+      targetStatus === ComplaintStatuses.CLOSED
+    ) {
+      return {
+        allowed: false,
+        reason: 'Only the citizen who reported the complaint (or BMC Super Admin) can verify and close a ticket'
+      };
+    }
+  }
+
+  if (actorRole === UserRoles.DEPT_OFFICER || actorRole === UserRoles.DEPT_SUPERVISOR) {
+    if (targetStatus === ComplaintStatuses.CLOSED) {
+      return {
+        allowed: false,
+        reason: 'Department officers cannot self-close tickets. Citizen verification is required.'
+      };
+    }
   }
 
   return { allowed: true };
