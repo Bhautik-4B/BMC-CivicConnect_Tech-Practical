@@ -265,7 +265,7 @@ export const EscalationCenterPage: React.FC = () => {
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <Link
-                        to={`/citizen/ticket/${comp.ticketId || comp.id}`}
+                        to={`/admin/ticket/${comp.ticketId || comp.id}`}
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-civic-50 hover:bg-civic-100 text-civic-700 font-bold transition-colors"
                       >
                         <span>Investigate</span>

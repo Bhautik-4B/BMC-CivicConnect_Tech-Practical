@@ -311,7 +311,7 @@ export const DepartmentDashboard: React.FC = () => {
                           <span>Dispatch</span>
                         </button>
                         <Link
-                          to={`/citizen/ticket/${comp.ticketId || comp.id}`}
+                          to={`/dept/ticket/${comp.ticketId || comp.id}`}
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
                         >
                           <span>Inspect</span>

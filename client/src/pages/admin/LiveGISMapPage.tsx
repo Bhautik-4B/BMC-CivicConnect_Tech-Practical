@@ -101,6 +101,7 @@ export const LiveGISMapPage: React.FC = () => {
             complaints={filteredComplaints}
             wards={wards}
             height="620px"
+            baseLink="/admin/ticket"
             onMarkerClick={(comp) => setSelectedComplaint(comp)}
           />
         </div>
@@ -149,7 +150,7 @@ export const LiveGISMapPage: React.FC = () => {
 
                 <div className="pt-3">
                   <Link
-                    to={`/citizen/ticket/${selectedComplaint.ticketId || selectedComplaint.id}`}
+                    to={`/admin/ticket/${selectedComplaint.ticketId || selectedComplaint.id}`}
                     className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-civic-600 hover:bg-civic-700 text-white rounded-xl font-bold transition-colors"
                   >
                     <span>Inspect Full Timeline</span>

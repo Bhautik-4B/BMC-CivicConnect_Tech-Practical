@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api.js';
 import { useAuthStore } from '../../store/authStore.js';
@@ -16,7 +17,8 @@ import {
   MapPin,
   Clock,
   AlertCircle,
-  PhoneCall
+  PhoneCall,
+  ArrowUpRight
 } from 'lucide-react';
 
 export const FieldDashboard: React.FC = () => {
@@ -164,12 +166,23 @@ export const FieldDashboard: React.FC = () => {
           pendingTasks.map((task) => (
             <div key={task.id} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-civic-700">{task.ticketId}</span>
+                <Link
+                  to={`/field/ticket/${task.ticketId || task.id}`}
+                  className="font-mono text-xs font-bold text-civic-700 hover:underline inline-flex items-center gap-1"
+                >
+                  <span>{task.ticketId}</span>
+                  <ArrowUpRight className="w-3 h-3" />
+                </Link>
                 <PriorityBadge priority={task.priority} />
               </div>
 
               <div>
-                <h3 className="font-bold text-sm text-slate-900">{task.title}</h3>
+                <Link
+                  to={`/field/ticket/${task.ticketId || task.id}`}
+                  className="font-bold text-sm text-slate-900 hover:text-civic-600 transition-colors block"
+                >
+                  {task.title}
+                </Link>
                 <p className="text-xs text-slate-500 mt-0.5">{task.location.address}</p>
               </div>
 

@@ -38,6 +38,7 @@ interface GISMapProps {
   center?: [number, number];
   zoom?: number;
   height?: string;
+  baseLink?: string;
   onMarkerClick?: (complaint: IComplaint) => void;
 }
 
@@ -47,6 +48,7 @@ export const GISMap: React.FC<GISMapProps> = ({
   center = [21.753, 72.138], // Bhavnagar default coordinates [lat, lng]
   zoom = 13,
   height = '500px',
+  baseLink,
   onMarkerClick
 }) => {
   return (
@@ -98,6 +100,7 @@ export const GISMap: React.FC<GISMapProps> = ({
         {complaints.map((comp) => {
           const lat = comp.location?.coordinates?.[1] || center[0];
           const lng = comp.location?.coordinates?.[0] || center[1];
+          const ticketLink = `${baseLink || '/admin/ticket'}/${comp.ticketId || comp.id}`;
 
           return (
             <Marker
@@ -125,7 +128,7 @@ export const GISMap: React.FC<GISMapProps> = ({
                   <div className="flex items-center justify-between pt-1 border-t border-slate-100">
                     <StatusBadge status={comp.status} />
                     <Link
-                      to={`/citizen/ticket/${comp.ticketId || comp.id}`}
+                      to={ticketLink}
                       className="inline-flex items-center gap-1 text-civic-600 font-bold hover:underline"
                     >
                       <span>Open</span>

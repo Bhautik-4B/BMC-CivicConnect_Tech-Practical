@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { useAuthStore } from './store/authStore.js';
 import { UserRoles } from '@bmc/shared';
 
@@ -47,6 +47,26 @@ const ProtectedRoute: React.FC<{
   return <>{children}</>;
 };
 
+// Smart Ticket Redirect based on active user role
+const SmartTicketRedirect: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const { user, isAuthenticated } = useAuthStore();
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+  if (user.role === UserRoles.BMC_ADMIN) {
+    return <Navigate to={`/admin/ticket/${id}`} replace />;
+  }
+  if (user.role === UserRoles.DEPT_OFFICER || user.role === UserRoles.DEPT_SUPERVISOR) {
+    return <Navigate to={`/dept/ticket/${id}`} replace />;
+  }
+  if (user.role === UserRoles.FIELD_STAFF) {
+    return <Navigate to={`/field/ticket/${id}`} replace />;
+  }
+  return <Navigate to={`/citizen/ticket/${id}`} replace />;
+};
+
 export const App: React.FC = () => {
   const { isAuthenticated, user } = useAuthStore();
 
@@ -74,6 +94,10 @@ export const App: React.FC = () => {
           }
         />
 
+        {/* Global Smart Ticket / Complaint Redirectors */}
+        <Route path="/ticket/:id" element={<SmartTicketRedirect />} />
+        <Route path="/complaints/:id" element={<SmartTicketRedirect />} />
+
         {/* 1. Citizen Portal Routes */}
         <Route
           path="/citizen"
@@ -100,6 +124,7 @@ export const App: React.FC = () => {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="complaints" element={<AllComplaintsPage />} />
+          <Route path="ticket/:id" element={<TicketDetailPage />} />
           <Route path="live-map" element={<LiveGISMapPage />} />
           <Route path="departments" element={<DepartmentManagementPage />} />
           <Route path="escalations" element={<EscalationCenterPage />} />
@@ -118,6 +143,7 @@ export const App: React.FC = () => {
         >
           <Route index element={<DepartmentDashboard />} />
           <Route path="queue" element={<DepartmentQueuePage />} />
+          <Route path="ticket/:id" element={<TicketDetailPage />} />
           <Route path="staff" element={<DepartmentDashboard />} />
         </Route>
 
@@ -131,6 +157,7 @@ export const App: React.FC = () => {
           }
         >
           <Route index element={<FieldDashboard />} />
+          <Route path="ticket/:id" element={<TicketDetailPage />} />
           <Route path="history" element={<FieldDashboard />} />
         </Route>
 

@@ -281,7 +281,7 @@ export const AllComplaintsPage: React.FC = () => {
                         <span>Assign</span>
                       </button>
                       <Link
-                        to={`/citizen/ticket/${comp.ticketId || comp.id}`}
+                        to={`/admin/ticket/${comp.ticketId || comp.id}`}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-colors"
                       >
                         <span>Details</span>
@@ -300,7 +300,7 @@ export const AllComplaintsPage: React.FC = () => {
             <TicketCard
               key={comp.id}
               complaint={comp}
-              baseLink="/citizen/ticket"
+              baseLink="/admin/ticket"
             />
           ))}
         </div>

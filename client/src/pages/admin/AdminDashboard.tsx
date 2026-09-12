@@ -227,14 +227,14 @@ export const AdminDashboard: React.FC = () => {
                   <td className="py-3">
                     <StatusBadge status={comp.status} />
                   </td>
-                  <td className="py-3 text-right">
-                    <Link
-                      to={`/citizen/ticket/${comp.ticketId || comp.id}`}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-civic-50 text-slate-700 hover:text-civic-700 font-semibold"
-                    >
-                      View
-                    </Link>
-                  </td>
+                    <td className="py-3 text-right">
+                      <Link
+                        to={`/admin/ticket/${comp.ticketId || comp.id}`}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-civic-50 text-slate-700 hover:text-civic-700 font-semibold"
+                      >
+                        View
+                      </Link>
+                    </td>
                 </tr>
               ))}
             </tbody>

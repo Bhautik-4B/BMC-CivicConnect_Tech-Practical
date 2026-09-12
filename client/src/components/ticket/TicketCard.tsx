@@ -1,5 +1,6 @@
 import React from 'react';
-import { IComplaint, ComplaintStatuses } from '@bmc/shared';
+import { IComplaint, ComplaintStatuses, UserRoles } from '@bmc/shared';
+import { useAuthStore } from '../../store/authStore.js';
 import { StatusBadge } from '../common/StatusBadge.js';
 import { PriorityBadge } from '../common/PriorityBadge.js';
 import { MapPin, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react';
@@ -14,9 +15,21 @@ interface TicketCardProps {
 export const TicketCard: React.FC<TicketCardProps> = ({
   complaint,
   onVerifyClick,
-  baseLink = '/complaints'
+  baseLink
 }) => {
+  const { user } = useAuthStore();
   const isAwaitingVerification = complaint.status === ComplaintStatuses.AWAITING_VERIFICATION;
+
+  // Resolve default base link based on user role
+  const resolvedBaseLink =
+    baseLink ||
+    (user?.role === UserRoles.BMC_ADMIN
+      ? '/admin/ticket'
+      : user?.role === UserRoles.DEPT_OFFICER || user?.role === UserRoles.DEPT_SUPERVISOR
+      ? '/dept/ticket'
+      : user?.role === UserRoles.FIELD_STAFF
+      ? '/field/ticket'
+      : '/citizen/ticket');
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all p-5 flex flex-col justify-between group">
@@ -69,7 +82,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           </button>
         ) : (
           <Link
-            to={`${baseLink}/${complaint.ticketId || complaint.id}`}
+            to={`${resolvedBaseLink}/${complaint.ticketId || complaint.id}`}
             className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-50 hover:bg-civic-50 text-slate-700 hover:text-civic-700 text-xs font-semibold border border-slate-200 transition-colors"
           >
             <span>View Details & Timeline</span>
@@ -80,3 +93,4 @@ export const TicketCard: React.FC<TicketCardProps> = ({
     </div>
   );
 };
+
